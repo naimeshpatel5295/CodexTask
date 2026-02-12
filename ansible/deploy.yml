@@ -22,20 +22,20 @@
 
     # 3️⃣ Pull latest images
     - name: Pull docker images
-      command: docker compose pull
+      command: docker compose -f docker-compose.prod.yml pull
       args:
         chdir: "{{ app_dir }}"
 
     # 4️⃣ Stop old containers (if any)
     - name: Stop existing containers
-      command: docker compose down
+      command: docker compose -f docker-compose.prod.yml down
       args:
         chdir: "{{ app_dir }}"
       ignore_errors: yes
 
     # 5️⃣ Start full stack
     - name: Start docker compose stack
-      command: docker compose up -d
+      command: docker compose -f docker-compose.prod.yml up -d
       args:
         chdir: "{{ app_dir }}"
 
