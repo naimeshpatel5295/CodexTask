@@ -1,37 +1,42 @@
-# Frontend Dockerfile - Multi-stage build for React SPA
+# ################################################
+# Frontend Dockerfile
+# Optimized for high-performance React serving using Nginx
+# ################################################
 
-# Stage 1: Build the React application
+# --- Stage 1: Build the React Application ---
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy dependency manifests
 COPY package*.json ./
 
-# Install all dependencies (including devDependencies for build)
+# Install dependencies (frozen-lockfile equivalent with npm ci)
 RUN npm ci
 
-# Copy source code
+# Copy the entire frontend source code
 COPY . .
 
-# Build the production bundle
+# Run the build script (Vite/React bundle)
+# This creates a minimized /dist folder
 RUN npm run build
 
-# Stage 2: Serve with nginx
+
+# --- Stage 2: Serve the Static Files ---
 FROM nginx:alpine AS production
 
-# Copy custom nginx configuration
+# Copy our custom Nginx config (handles SPA routing if needed)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy built assets from builder stage
+# Copy the static website files from the builder stage to Nginx's public folder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port 80
+# Expose the standard web port (80)
 EXPOSE 80
 
-# Health check
+# Health check to ensure Nginx is serving files
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
 
-# Start nginx
+# Launch Nginx in the foreground
 CMD ["nginx", "-g", "daemon off;"]

@@ -1,0 +1,21 @@
+// Prisma Schema File
+// Defines the Database connection and Data models
+
+// 1. Data Source: Connects to PostgreSQL
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // Pulls connection string from .env or docker-compose
+}
+
+// 2. Generator: Creates the Prisma Client in JavaScript/TypeScript
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 3. Data Model: The "Todo" table definition
+model Todo {
+  id        String   @id @default(uuid())    // Unique Identifier (UUID)
+  text      String                           // Task description
+  completed Boolean  @default(false)         // Status (defaults to not done)
+  createdAt DateTime @default(now())         // Timestamp of creation
+}

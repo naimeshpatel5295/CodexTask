@@ -1,7 +1,12 @@
+# ################################################
+# Docker Compose Orchestration
+# Manages the Backend, Frontend, and Database containers
+# ################################################
+
 version: '3.8'
 
 services:
-  # Backend API Service
+  # 1. Backend API: TypeScript + Express + Prisma
   backend:
     build:
       context: ./backend
@@ -12,6 +17,10 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=5000
+      - DATABASE_URL=postgresql://postgres:password@db:5432/codextask?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - codex-network
@@ -22,7 +31,7 @@ services:
       retries: 3
       start_period: 5s
 
-  # Frontend Web Service
+  # 2. Frontend Web: React + Vite + Nginx
   frontend:
     build:
       context: ./frontend
@@ -42,6 +51,31 @@ services:
       retries: 3
       start_period: 5s
 
+  # 3. Database: PostgreSQL service (Prompt 7)
+  db:
+    image: postgres:15-alpine # Updated to v15 as per prompt
+    container_name: codex-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=codextask
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Persistent volume added (Prompt 7)
+    restart: unless-stopped
+    networks:
+      - codex-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d codextask"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 networks:
   codex-network:
     driver: bridge
+
+# Define the persistent volume (Prompt 7)
+volumes:
+  postgres_data:
