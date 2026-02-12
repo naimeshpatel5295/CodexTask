@@ -38,4 +38,5 @@ jobs:
         run: |
           ansible-playbook ansible/deploy.yml \
             -i ansible/inventory.ini \
-            --private-key ~/.ssh/id_rsa
+            --private-key ~/.ssh/id_rsa \
+            -e "ansible_ssh_common_args='-o StrictHostKeyChecking=no'"
