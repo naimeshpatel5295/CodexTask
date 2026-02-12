@@ -10,7 +10,7 @@ import TodoList from './components/TodoList.jsx';
 
 // Axios Instance: Pre-configured to point to our backend API
 const api = axios.create({
-  baseURL: 'http://localhost:5000'
+  baseURL: '/api'
 });
 
 export default function App() {
