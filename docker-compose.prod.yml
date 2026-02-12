@@ -1,0 +1,79 @@
+# ##############################################################################
+# PRODUCTION DOCKER COMPOSE ORCHESTRATION
+# 
+# NETWORKING EXPLANATION:
+# - All services are joined to the 'codex-prod-network' (bridge).
+# - Containers communicate using SERVICE NAMES as hostnames (e.g., 'http://db:5432').
+# - Only the 'nginx' service exposes a public port (80) to the internet.
+# - 'backend' and 'frontend' ports are kept PRIVATE within the network for security.
+# ##############################################################################
+
+version: '3.8'
+
+services:
+  # 1. GATEWAY: Nginx Reverse Proxy (The only entry point)
+  nginx:
+    image: nginx:alpine
+    container_name: codex-gateway
+    ports:
+      - "80:80"
+    volumes:
+      # Mount the reverse proxy configuration we created
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - codex-prod-network
+    restart: always
+
+  # 2. UI: Frontend Web Server (Static assets via Nginx)
+  frontend:
+    image: codextask-frontend:latest
+    container_name: codex-ui
+    # EXPOSE 80 is internal only; users go through the gateway
+    networks:
+      - codex-prod-network
+    restart: always
+
+  # 3. LOGIC: Backend API (TypeScript/Express/Prisma)
+  backend:
+    image: codextask-backend:latest
+    container_name: codex-api
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:password@db:5432/codextask?schema=public}
+      - NODE_ENV=production
+    expose:
+      - "5000" # Internal communication only
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - codex-prod-network
+    restart: always
+
+  # 4. DATA: PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: codex-db-prod
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=codextask
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d codextask"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - codex-prod-network
+    restart: always
+
+networks:
+  codex-prod-network:
+    driver: bridge
+
+volumes:
+  postgres_prod_data:
