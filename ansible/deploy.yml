@@ -1,0 +1,48 @@
+- name: Deploy CodexTask stack
+  hosts: web
+  become: true
+
+  vars:
+    app_dir: /home/ec2-user/app
+    repo_url: https://github.com/naimeshpatel5295/CodexTask.git
+
+  tasks:
+
+    # 1️⃣ Pull latest repo on EC2
+    - name: Pull latest project repo
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ app_dir }}"
+        version: main
+        force: yes
+
+    # 2️⃣ Login to DockerHub (so EC2 can pull private images if needed)
+    - name: Docker login
+      shell: echo "{{ lookup('env','DOCKERHUB_TOKEN') }}" | docker login -u "{{ lookup('env','DOCKERHUB_USERNAME') }}" --password-stdin
+
+    # 3️⃣ Pull latest images
+    - name: Pull docker images
+      command: docker compose pull
+      args:
+        chdir: "{{ app_dir }}"
+
+    # 4️⃣ Stop old containers (if any)
+    - name: Stop existing containers
+      command: docker compose down
+      args:
+        chdir: "{{ app_dir }}"
+      ignore_errors: yes
+
+    # 5️⃣ Start full stack
+    - name: Start docker compose stack
+      command: docker compose up -d
+      args:
+        chdir: "{{ app_dir }}"
+
+    # 6️⃣ Show running containers
+    - name: Show running containers
+      command: docker ps
+      register: docker_ps
+
+    - debug:
+        var: docker_ps.stdout_lines
