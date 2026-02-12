@@ -1,0 +1,52 @@
+- name: Bootstrap EC2 for Docker deployments
+  hosts: web
+  become: true
+
+  tasks:
+
+    - name: Update packages
+      yum:
+        name: "*"
+        state: latest
+
+    - name: Install Docker
+      yum:
+        name: docker
+        state: present
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Add ec2-user to docker group
+      user:
+        name: ec2-user
+        groups: docker
+        append: yes
+
+    - name: Install Git
+      yum:
+        name: git
+        state: present
+
+    # Install Docker Compose v2 plugin
+    - name: Create docker cli plugins directory
+      file:
+        path: /usr/libexec/docker/cli-plugins
+        state: directory
+        mode: '0755'
+
+    - name: Install Docker Compose plugin
+      get_url:
+        url: https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64
+        dest: /usr/libexec/docker/cli-plugins/docker-compose
+        mode: '0755'
+
+    - name: Create app directory
+      file:
+        path: /home/ec2-user/app
+        state: directory
+        owner: ec2-user
+        group: ec2-user
