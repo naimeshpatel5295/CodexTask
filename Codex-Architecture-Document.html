@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Codex — Architecture Document</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
+  <style>
+    /* ============================================
+       PRINT-FIRST PDF DOCUMENT
+       A4 = 210mm x 297mm
+       ============================================ */
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 210mm;
+      margin: 0 auto;
+      padding: 0;
+      font-family: 'Inter', -apple-system, sans-serif;
+      font-size: 10.5px;
+      line-height: 1.6;
+      color: #1a1a2e;
+      background: #fff;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      forced-color-adjust: none !important;
+    }
+
+    /* ============================================
+       FIXED PAGE CONTAINER
+       Each .pdf-page is exactly one A4 page
+       ============================================ */
+    .pdf-page {
+      width: 210mm;
+      height: 297mm;
+      position: relative;
+      overflow: hidden;
+      page-break-after: always;
+      page-break-inside: avoid;
+    }
+
+    .pdf-page:last-child {
+      page-break-after: auto;
+    }
+
+    /* ============================================
+       PAGE 1: COVER
+       ============================================ */
+    .cover {
+      width: 210mm;
+      height: 297mm;
+      background: linear-gradient(160deg, #0a0a0f 0%, #12121f 40%, #1a1028 100%);
+      color: #f0ece4;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 22mm 22mm 18mm;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover::before {
+      content: '';
+      position: absolute;
+      width: 180mm;
+      height: 180mm;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(232,167,56,0.12) 0%, transparent 70%);
+      top: -40mm;
+      right: -50mm;
+    }
+
+    .cover::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1mm;
+      background: linear-gradient(90deg, #e8a738, #d4952f, #e8a738);
+    }
+
+    .cover-label {
+      font-size: 9.5px;
+      font-weight: 600;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: #e8a738;
+      margin-bottom: 10mm;
+    }
+
+    .cover h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 64px;
+      font-weight: 900;
+      line-height: 1.05;
+      margin-bottom: 2mm;
+    }
+
+    .cover h1 span { color: #e8a738; }
+
+    .cover-subtitle {
+      font-size: 20px;
+      font-weight: 300;
+      color: #9a9590;
+      margin-bottom: 20mm;
+      letter-spacing: 0.5px;
+    }
+
+    .cover-meta {
+      display: flex;
+      gap: 14mm;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding-top: 8mm;
+      margin-top: auto;
+    }
+
+    .cover-meta-item label {
+      display: block;
+      font-size: 8px;
+      font-weight: 600;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: #5a5550;
+      margin-bottom: 1mm;
+    }
+
+    .cover-meta-item span {
+      font-size: 12px;
+      font-weight: 400;
+      color: #c0bbb5;
+    }
+
+    /* ============================================
+       CONTENT PAGES
+       ============================================ */
+    .content-area {
+      width: 100%;
+      height: 100%;
+      padding: 16mm 20mm 18mm;
+      position: relative;
+    }
+
+    /* Top line */
+    .content-area::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 20mm;
+      right: 20mm;
+      height: 0.3mm;
+      background: #e0ddd8;
+    }
+
+    .page-number {
+      position: absolute;
+      bottom: 12mm;
+      right: 20mm;
+      font-size: 9px;
+      font-weight: 500;
+      color: #b0aca5;
+      letter-spacing: 1px;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10mm;
+      padding-bottom: 3mm;
+      border-bottom: 0.6mm solid #1a1a2e;
+    }
+
+    .page-header-title {
+      font-size: 8px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #9a9590;
+    }
+
+    .page-header-project {
+      font-size: 8px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #e8a738;
+    }
+
+    /* ============================================
+       TYPOGRAPHY
+       ============================================ */
+    .section-number {
+      font-family: 'Playfair Display', serif;
+      font-size: 42px;
+      font-weight: 900;
+      color: #f0ece4;
+      line-height: 1;
+      margin-bottom: 1mm;
+    }
+
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 4mm;
+      line-height: 1.2;
+    }
+
+    h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin: 5mm 0 2.5mm;
+      letter-spacing: 0.2px;
+    }
+
+    h4 {
+      font-size: 10px;
+      font-weight: 600;
+      color: #5a5550;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin: 4mm 0 2mm;
+    }
+
+    p, li {
+      font-size: 10.5px;
+      line-height: 1.65;
+      color: #3a3a4a;
+    }
+
+    ul { padding-left: 5mm; margin: 2mm 0; }
+    li { margin-bottom: 1mm; }
+
+    strong { color: #1a1a2e; font-weight: 600; }
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      background: #f5f3f0;
+      padding: 0.5mm 1.5mm;
+      border-radius: 1mm;
+    }
+    em { color: #7a7570; }
+
+    /* ============================================
+       REUSABLE COMPONENTS
+       ============================================ */
+
+    /* Highlight Box */
+    .highlight-box {
+      background: #faf8f5;
+      border-left: 1mm solid #e8a738;
+      padding: 3.5mm 5mm;
+      margin: 3mm 0;
+      border-radius: 0 2mm 2mm 0;
+    }
+    .highlight-box p { font-size: 10px; color: #3a3a4a; }
+
+    /* Tech Card Grid */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3mm;
+      margin: 3mm 0;
+    }
+
+    .tech-card {
+      background: #faf8f5;
+      border: 0.3mm solid #ebe8e3;
+      border-radius: 2.5mm;
+      padding: 4mm;
+    }
+
+    .tech-card-label {
+      font-size: 7.5px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #9a9590;
+      margin-bottom: 1.5mm;
+    }
+
+    .tech-card-value {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .tech-card-desc {
+      font-size: 9px;
+      color: #7a7570;
+      margin-top: 1mm;
+      line-height: 1.5;
+    }
+
+    /* Architecture / Code Diagram */
+    .arch-diagram {
+      background: #0f0f14;
+      border-radius: 3mm;
+      padding: 5mm 6mm;
+      margin: 3mm 0;
+      color: #f0ece4;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8.5px;
+      line-height: 1.7;
+      white-space: pre;
+      overflow: hidden;
+    }
+    .arch-diagram .dim { color: #4a4a5a; }
+    .arch-diagram .accent { color: #e8a738; }
+    .arch-diagram .green { color: #7fb069; }
+    .arch-diagram .blue { color: #6ba3d6; }
+    .arch-diagram .pink { color: #d4729a; }
+
+    /* Code Block */
+    .code-block {
+      background: #0f0f14;
+      border-radius: 2.5mm;
+      padding: 4mm 5mm;
+      margin: 2.5mm 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      line-height: 1.75;
+      color: #c0bbb5;
+      overflow: hidden;
+      white-space: pre;
+    }
+    .code-block .keyword { color: #d4729a; }
+    .code-block .string { color: #7fb069; }
+    .code-block .comment { color: #4a4a5a; }
+    .code-block .func { color: #6ba3d6; }
+    .code-block .accent { color: #e8a738; }
+
+    /* Tables */
+    .api-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 3mm 0;
+      font-size: 10px;
+    }
+    .api-table th {
+      text-align: left;
+      font-size: 8px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #9a9590;
+      padding: 2.5mm 3mm;
+      border-bottom: 0.5mm solid #1a1a2e;
+    }
+    .api-table td {
+      padding: 2.5mm 3mm;
+      border-bottom: 0.2mm solid #ebe8e3;
+      vertical-align: top;
+      font-size: 10px;
+    }
+    .api-table tr:last-child td { border-bottom: none; }
+
+    .method {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8.5px;
+      font-weight: 500;
+      padding: 0.5mm 2mm;
+      border-radius: 1mm;
+      display: inline-block;
+    }
+    .method.get { background: #e8f5e9; color: #2e7d32; }
+    .method.post { background: #e3f2fd; color: #1565c0; }
+    .method.put { background: #fff3e0; color: #e65100; }
+    .method.del { background: #fce4ec; color: #c62828; }
+
+    .endpoint {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9.5px;
+      color: #1a1a2e;
+    }
+
+    /* Component Tree */
+    .tree {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      line-height: 1.9;
+      padding: 4mm 5mm;
+      background: #faf8f5;
+      border: 0.3mm solid #ebe8e3;
+      border-radius: 2.5mm;
+      margin: 3mm 0;
+      white-space: pre;
+    }
+    .tree .comp { color: #6ba3d6; font-weight: 500; }
+    .tree .dim { color: #b0aca5; }
+    .tree .desc { color: #7a7570; font-family: 'Inter', sans-serif; font-size: 9px; }
+
+    /* Two Column */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5mm;
+      margin: 3mm 0;
+    }
+
+    /* Color Swatches */
+    .design-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 3mm;
+      margin: 3mm 0;
+    }
+    .color-swatch { text-align: center; }
+    .color-swatch .swatch-color {
+      width: 100%;
+      height: 12mm;
+      border-radius: 2mm;
+      margin-bottom: 2mm;
+      border: 0.2mm solid rgba(0,0,0,0.06);
+    }
+    .color-swatch .swatch-name {
+      font-size: 8px;
+      font-weight: 600;
+      color: #1a1a2e;
+    }
+    .color-swatch .swatch-hex {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      color: #9a9590;
+    }
+
+    /* Flow Diagram */
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 2mm;
+      margin: 3mm 0;
+      flex-wrap: wrap;
+    }
+    .flow-step {
+      background: #faf8f5;
+      border: 0.3mm solid #ebe8e3;
+      border-radius: 2mm;
+      padding: 2mm 3.5mm;
+      font-size: 9px;
+      font-weight: 500;
+      color: #1a1a2e;
+    }
+    .flow-step.highlight {
+      background: #e8a738;
+      border-color: #d4952f;
+      color: #0f0f0f;
+    }
+    .flow-arrow { color: #c0bbb5; font-size: 12px; }
+
+    /* Feature List */
+    .feature-list {
+      list-style: none;
+      padding: 0;
+      margin: 2mm 0;
+    }
+    .feature-list li {
+      padding: 2mm 0 2mm 7mm;
+      position: relative;
+      border-bottom: 0.2mm solid #f3f1ee;
+      font-size: 10px;
+    }
+    .feature-list li:last-child { border-bottom: none; }
+    .feature-list li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 3.2mm;
+      width: 3.5mm;
+      height: 3.5mm;
+      background: #e8a738;
+      border-radius: 0.8mm;
+      opacity: 0.2;
+    }
+
+    /* TOC */
+    .toc { list-style: none; padding: 0; margin: 5mm 0; }
+    .toc li {
+      display: flex;
+      align-items: baseline;
+      gap: 4mm;
+      padding: 3mm 0;
+      border-bottom: 0.2mm solid #f0ece4;
+    }
+    .toc-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #d0ccc5;
+      min-width: 10mm;
+    }
+    .toc-title { font-size: 13px; font-weight: 600; color: #1a1a2e; }
+    .toc-desc { font-size: 9.5px; color: #7a7570; }
+
+    /* ============================================
+       PRINT OVERRIDES
+       ============================================ */
+    @media print {
+      html, body {
+        width: 210mm;
+        margin: 0;
+        padding: 0;
+      }
+      .pdf-page {
+        width: 210mm;
+        height: 297mm;
+        page-break-after: always;
+        page-break-inside: avoid;
+        overflow: hidden;
+      }
+      .pdf-page:last-child {
+        page-break-after: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==============================
+       PAGE 1 — COVER
+       ============================== -->
+  <div class="pdf-page">
+    <div class="cover">
+      <div class="cover-label">Software Architecture Document</div>
+      <h1>Codex<span>.</span></h1>
+      <div class="cover-subtitle">Full-Stack Task Management Application</div>
+      <div class="cover-meta">
+        <div class="cover-meta-item">
+          <label>Version</label>
+          <span>1.0.0</span>
+        </div>
+        <div class="cover-meta-item">
+          <label>Architecture</label>
+          <span>Client-Server (REST)</span>
+        </div>
+        <div class="cover-meta-item">
+          <label>Date</label>
+          <span>February 2026</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==============================
+       PAGE 2 — TABLE OF CONTENTS
+       ============================== -->
+  <div class="pdf-page">
+    <div class="content-area">
+      <div class="page-header">
+        <span class="page-header-title">Table of Contents</span>
+        <span class="page-header-project">Codex Architecture</span>
+      </div>
+      <div class="section-number">00</div>
+      <h2>Contents</h2>
+      <ul class="toc">
+        <li>
+          <span class="toc-num">01</span>
+          <div>
+            <div class="toc-title">System Overview</div>
+            <div class="toc-desc">High-level architecture, project goals, and design principles</div>
+          </div>
+        </li>
+        <li>
+          <span class="toc-num">02</span>
+          <div>
+            <div class="toc-title">Technology Stack</div>
+            <div class="toc-desc">Frontend and backend technologies with rationale</div>
+          </div>
+        </li>
+        <li>
+          <span class="toc-num">03</span>
+          <div>
+            <div class="toc-title">Backend Architecture</div>
+            <div class="toc-desc">REST API design, endpoints, data model, and middleware pipeline</div>
+          </div>
+        </li>
+        <li>
+          <span class="toc-num">04</span>
+          <div>
+            <div class="toc-title">Frontend Architecture</div>
+            <div class="toc-desc">Component hierarchy, state management, and data flow</div>
+          </div>
+        </li>
+        <li>
+          <span class="toc-num">05</span>
+          <div>
+            <div class="toc-title">UI/UX Design System</div>
+            <div class="toc-desc">Design philosophy, color palette, typography, and animation strategy</div>
+          </div>
+        </li>
+        <li>
+          <span class="toc-num">06</span>
+          <div>
+            <div class="toc-title">Data Flow &amp; Communication</div>
+            <div class="toc-desc">Client-server interaction, optimistic updates, and request lifecycle</div>
+          </div>
+        </li>
+        <li>
+          <span class="toc-num">07</span>
+          <div>
+            <div class="toc-title">Trade-offs &amp; Future Roadmap</div>
+            <div class="toc-desc">Architectural decisions, known limitations, and scaling considerations</div>
+          </div>
+        </li>
+      </ul>
+      <span class="page-number">02</span>
+    </div>
+  </div>
+
+  <!-- ==============================
+       PAGE 3 — SYSTEM OVERVIEW
+       ============================== -->
+  <div class="pdf-page">
+    <div class="content-area">
+      <div class="page-header">
+        <span class="page-header-title">System Overview</span>
+        <span class="page-header-project">Codex Architecture</span>
+      </div>
+      <div class="section-number">01</div>
+      <h2>System Overview</h2>
+
+      <p>Codex is a <strong>full-stack task management application</strong> built with a decoupled client-server architecture. The system follows a <strong>separation of concerns</strong> principle — the frontend and backend are independently deployable services that communicate exclusively through a RESTful HTTP API.</p>
+
+      <div class="highlight-box">
+        <p><strong>Core Principle:</strong> The application demonstrates a production-grade architecture pattern even at a small scale — clean API contracts, component-driven UI, centralized state, and a polished design system that prioritizes developer experience and user delight.</p>
+      </div>
+
+      <h3>Architecture Diagram</h3>
+
+      <div class="arch-diagram"><span class="dim">┌──────────────────────────────────────────────────────────────────┐</span>
+<span class="dim">│</span>  <span class="accent">BROWSER (Client)</span>                                                <span class="dim">│</span>
+<span class="dim">│</span>                                                                  <span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">┌────────────────────────────────────────────────────────────┐</span>  <span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">│</span>  <span class="blue">React SPA</span>  <span class="dim">(Vite Dev Server :5173)</span>                       <span class="dim">│</span>  <span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">│</span>                                                            <span class="dim">│</span>  <span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">│</span>  <span class="green">App.jsx</span> ─── State Manager (useState)                    <span class="dim">│</span>  <span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">│</span>    <span class="dim">├──</span> <span class="pink">TodoForm.jsx</span>    → User Input                      <span class="dim">│</span>  <span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">│</span>    <span class="dim">├──</span> <span class="pink">TodoList.jsx</span>    → List Container                  <span class="dim">│</span>  <span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">│</span>    <span class="dim">└──</span> <span class="pink">TodoItem.jsx</span>    → Individual Task                 <span class="dim">│</span>  <span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">│</span>                                                            <span class="dim">│</span>  <span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">│</span>  <span class="accent">Axios HTTP Client</span>                                       <span class="dim">│</span>  <span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">└──────────────────┬─────────────────────────────────────────┘</span>  <span class="dim">│</span>
+<span class="dim">│</span>                     <span class="dim">│</span>                                            <span class="dim">│</span>
+<span class="dim">└─────────────────────┼────────────────────────────────────────────┘</span>
+                      <span class="dim">│</span>  <span class="accent">HTTP / JSON</span>
+                      <span class="dim">│</span>  <span class="dim">GET  POST  PUT  DELETE</span>
+                      <span class="dim">│</span>
+<span class="dim">┌─────────────────────┼────────────────────────────────────────────┐</span>
+<span class="dim">│</span>  <span class="accent">SERVER</span>            <span class="dim">│</span>                                            <span class="dim">│</span>
+<span class="dim">│</span>                     <span class="dim">▼</span>                                            <span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">┌────────────────────────────────────────────────────────────┐</span>  <span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">│</span>  <span class="blue">Express.js REST API</span>  <span class="dim">(:5000)</span>                              <span class="dim">│</span>  <span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">│</span>                                                            <span class="dim">│</span>  <span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">│</span>  <span class="dim">Middleware:</span>  <span class="green">CORS</span> → <span class="green">JSON Parser</span> → <span class="accent">Route Handler</span>           <span class="dim">│</span>  <span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">│</span>                                                            <span class="dim">│</span>  <span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">│</span>  <span class="dim">Data Store:</span>  <span class="pink">In-Memory Array</span> (todos[])                  <span class="dim">│</span>  <span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">└────────────────────────────────────────────────────────────┘</span>  <span class="dim">│</span>
+<span class="dim">│</span>                                                                  <span class="dim">│</span>
+<span class="dim">└──────────────────────────────────────────────────────────────────┘</span></div>
+
+      <h3>Design Principles</h3>
+      <div class="two-col">
+        <div>
+          <ul class="feature-list">
+            <li><strong>Separation of Concerns</strong> — Frontend and backend are fully decoupled; communicate only via REST API contract</li>
+            <li><strong>Component-Driven UI</strong> — Each UI element is an isolated, reusable React component with single responsibility</li>
+            <li><strong>Unidirectional Data Flow</strong> — State lives in App.jsx; child components receive data via props and emit events upward</li>
+          </ul>
+        </div>
+        <div>
+          <ul class="feature-list">
+            <li><strong>Stateless Server</strong> — Each API request is self-contained; server doesn't track client sessions</li>
+            <li><strong>Convention over Configuration</strong> — RESTful URL patterns, standard HTTP methods, predictable JSON responses</li>
+            <li><strong>Progressive Enhancement</strong> — Loading states, empty states, and error-resilient UI patterns</li>
+          </ul>
+        </div>
+      </div>
+
+      <span class="page-number">03</span>
+    </div>
+  </div>
+
+  <!-- ==============================
+       PAGE 4 — TECHNOLOGY STACK
+       ============================== -->
+  <div class="pdf-page">
+    <div class="content-area">
+      <div class="page-header">
+        <span class="page-header-title">Technology Stack</span>
+        <span class="page-header-project">Codex Architecture</span>
+      </div>
+      <div class="section-number">02</div>
+      <h2>Technology Stack</h2>
+
+      <p>Every technology choice was made with a clear rationale — balancing <strong>developer velocity</strong>, <strong>ecosystem maturity</strong>, and <strong>production readiness</strong>.</p>
+
+      <h4>Frontend</h4>
+      <div class="tech-grid">
+        <div class="tech-card">
+          <div class="tech-card-label">UI Library</div>
+          <div class="tech-card-value">React 18</div>
+          <div class="tech-card-desc">Component-based architecture with hooks for state management. Concurrent features enable better UX with suspense-compatible patterns.</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-label">Build Tool</div>
+          <div class="tech-card-value">Vite 5</div>
+          <div class="tech-card-desc">Native ESM dev server with instant HMR. Rollup-based production builds with tree-shaking and code splitting.</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-label">HTTP Client</div>
+          <div class="tech-card-value">Axios</div>
+          <div class="tech-card-desc">Promise-based HTTP client with instance configuration, interceptors, automatic JSON transformation, and request cancellation.</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-label">Styling</div>
+          <div class="tech-card-value">Pure CSS + Variables</div>
+          <div class="tech-card-desc">CSS custom properties for theming, keyframe animations, and zero-dependency design system. No CSS-in-JS runtime overhead.</div>
+        </div>
+      </div>
+
+      <h4>Backend</h4>
+      <div class="tech-grid">
+        <div class="tech-card">
+          <div class="tech-card-label">Runtime</div>
+          <div class="tech-card-value">Node.js</div>
+          <div class="tech-card-desc">Event-driven, non-blocking I/O runtime. Shared JavaScript across the full stack reduces context switching.</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-label">Framework</div>
+          <div class="tech-card-value">Express 5</div>
+          <div class="tech-card-desc">Minimal, unopinionated web framework. Middleware-based request pipeline with robust routing and ecosystem support.</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-label">Cross-Origin</div>
+          <div class="tech-card-value">CORS Middleware</div>
+          <div class="tech-card-desc">Enables cross-origin requests from the Vite dev server (:5173) to the API server (:5000) during development.</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-label">Data Store</div>
+          <div class="tech-card-value">In-Memory Array</div>
+          <div class="tech-card-desc">Simple JavaScript array for rapid prototyping. Designed to be swapped with MongoDB/PostgreSQL via a repository pattern.</div>
+        </div>
+      </div>
+
+      <h3>Project Structure</h3>
+      <div class="code-block"><span class="accent">Codex-project/</span>
+<span class="dim">├──</span> <span class="blue">frontend/</span>                  <span class="comment">← React SPA</span>
+<span class="dim">│</span>   <span class="dim">├──</span> index.html             <span class="comment">← Entry HTML + font loading</span>
+<span class="dim">│</span>   <span class="dim">├──</span> package.json
+<span class="dim">│</span>   <span class="dim">├──</span> vite.config.js
+<span class="dim">│</span>   <span class="dim">└──</span> <span class="blue">src/</span>
+<span class="dim">│</span>       <span class="dim">├──</span> main.jsx            <span class="comment">← React DOM mount point</span>
+<span class="dim">│</span>       <span class="dim">├──</span> App.jsx             <span class="comment">← Root component + state</span>
+<span class="dim">│</span>       <span class="dim">├──</span> index.css           <span class="comment">← Global design system</span>
+<span class="dim">│</span>       <span class="dim">└──</span> <span class="blue">components/</span>
+<span class="dim">│</span>           <span class="dim">├──</span> TodoForm.jsx    <span class="comment">← Input form component</span>
+<span class="dim">│</span>           <span class="dim">├──</span> TodoList.jsx    <span class="comment">← List container</span>
+<span class="dim">│</span>           <span class="dim">└──</span> TodoItem.jsx    <span class="comment">← Single todo row</span>
+<span class="dim">│</span>
+<span class="dim">└──</span> <span class="blue">backend/</span>                   <span class="comment">← Express REST API</span>
+    <span class="dim">├──</span> server.js              <span class="comment">← Server + routes + data</span>
+    <span class="dim">└──</span> package.json</div>
+
+      <span class="page-number">04</span>
+    </div>
+  </div>
+
+  <!-- ==============================
+       PAGE 5 — BACKEND ARCHITECTURE
+       ============================== -->
+  <div class="pdf-page">
+    <div class="content-area">
+      <div class="page-header">
+        <span class="page-header-title">Backend Architecture</span>
+        <span class="page-header-project">Codex Architecture</span>
+      </div>
+      <div class="section-number">03</div>
+      <h2>Backend Architecture</h2>
+
+      <p>The backend is a <strong>lightweight REST API</strong> built with Express.js. It follows a single-file architecture optimized for clarity, with a clear middleware pipeline and resource-oriented routing.</p>
+
+      <h3>Middleware Pipeline</h3>
+      <div class="flow">
+        <div class="flow-step">Incoming Request</div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step highlight">CORS</div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step highlight">JSON Body Parser</div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step highlight">Route Handler</div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">JSON Response</div>
+      </div>
+
+      <h3>REST API Endpoints</h3>
+      <table class="api-table">
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Description</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="method get">GET</span></td>
+            <td><span class="endpoint">/todos</span></td>
+            <td>Retrieve all todos</td>
+            <td>200 OK</td>
+          </tr>
+          <tr>
+            <td><span class="method post">POST</span></td>
+            <td><span class="endpoint">/todos</span></td>
+            <td>Create a new todo <em>(body: { text })</em></td>
+            <td>201 Created</td>
+          </tr>
+          <tr>
+            <td><span class="method put">PUT</span></td>
+            <td><span class="endpoint">/todos/:id</span></td>
+            <td>Toggle completed status of a todo</td>
+            <td>200 OK</td>
+          </tr>
+          <tr>
+            <td><span class="method del">DELETE</span></td>
+            <td><span class="endpoint">/todos/:id</span></td>
+            <td>Delete a todo by ID</td>
+            <td>200 OK</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Data Model</h3>
+      <div class="code-block"><span class="comment">// Todo Entity Schema</span>
+{
+  <span class="accent">id</span>:         <span class="blue">Number</span>     <span class="comment">// Auto-incrementing unique identifier</span>
+  <span class="accent">text</span>:       <span class="blue">String</span>     <span class="comment">// Task description (trimmed, required)</span>
+  <span class="accent">completed</span>:  <span class="blue">Boolean</span>    <span class="comment">// Toggle state (default: false)</span>
+}</div>
+
+      <h3>Input Validation</h3>
+      <p>The POST endpoint validates incoming data before creating a todo:</p>
+      <div class="code-block"><span class="keyword">app</span>.<span class="func">post</span>(<span class="string">'/todos'</span>, (req, res) =&gt; {
+  <span class="keyword">const</span> { text } = req.body;
+
+  <span class="comment">// Guard: reject empty or non-string payloads</span>
+  <span class="keyword">if</span> (!text || <span class="keyword">typeof</span> text !== <span class="string">'string'</span>) {
+    <span class="keyword">return</span> res.<span class="func">status</span>(<span class="accent">400</span>).<span class="func">json</span>({ message: <span class="string">'Text is required'</span> });
+  }
+
+  <span class="keyword">const</span> newTodo = { id: nextId++, text: text.<span class="func">trim</span>(), completed: <span class="accent">false</span> };
+  todos.<span class="func">push</span>(newTodo);
+  res.<span class="func">status</span>(<span class="accent">201</span>).<span class="func">json</span>(newTodo);
+});</div>
+
+      <h3>Error Handling Strategy</h3>
+      <ul>
+        <li><strong>400 Bad Request</strong> — Missing or invalid <code>text</code> field in POST body</li>
+        <li><strong>404 Not Found</strong> — Todo with the given <code>:id</code> does not exist (PUT / DELETE)</li>
+        <li>All error responses return consistent JSON: <code>{ "message": "..." }</code></li>
+      </ul>
+
+      <span class="page-number">05</span>
+    </div>
+  </div>
+
+  <!-- ==============================
+       PAGE 6 — FRONTEND ARCHITECTURE
+       ============================== -->
+  <div class="pdf-page">
+    <div class="content-area">
+      <div class="page-header">
+        <span class="page-header-title">Frontend Architecture</span>
+        <span class="page-header-project">Codex Architecture</span>
+      </div>
+      <div class="section-number">04</div>
+      <h2>Frontend Architecture</h2>
+
+      <p>The frontend follows a <strong>component-driven architecture</strong> with <strong>centralized state management</strong> using React hooks. The root <code>App.jsx</code> acts as the single source of truth — child components are stateless presentational units.</p>
+
+      <h3>Component Hierarchy</h3>
+      <div class="tree"><span class="comp">App</span> <span class="desc">— Root: owns state, API calls, derived computations</span>
+<span class="dim">├──</span> <span class="comp">TodoForm</span> <span class="desc">— Controlled input, form submission, calls onAdd(text)</span>
+<span class="dim">├──</span> <span class="comp">TodoList</span> <span class="desc">— Maps todos array to TodoItem components</span>
+<span class="dim">│</span>   <span class="dim">└──</span> <span class="comp">TodoItem</span> <span class="desc">— Checkbox toggle, text display, delete button</span>
+<span class="dim">├──</span> <span class="desc">Stats Bar</span> <span class="desc">— Derived: total / pending / done counts</span>
+<span class="dim">└──</span> <span class="desc">Footer</span> <span class="desc">— Remaining count + clear completed action</span></div>
+
+      <h3>State Management Pattern</h3>
+      <div class="highlight-box">
+        <p><strong>Lifting State Up:</strong> All todo state lives in <code>App.jsx</code> via <code>useState</code>. Child components never mutate state directly — they call callback props (<code>onAdd</code>, <code>onToggle</code>, <code>onDelete</code>) which trigger API calls and state updates in the parent.</p>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <h4>State Variables</h4>
+          <div class="code-block"><span class="keyword">const</span> [todos, setTodos] = <span class="func">useState</span>([]);
+<span class="keyword">const</span> [loading, setLoading] = <span class="func">useState</span>(<span class="accent">true</span>);</div>
+          <ul>
+            <li><strong>todos[]</strong> — Primary data: array of todo objects synced with server</li>
+            <li><strong>loading</strong> — UI state: controls loading skeleton vs content display</li>
+          </ul>
+        </div>
+        <div>
+          <h4>Derived State (Computed)</h4>
+          <div class="code-block"><span class="keyword">const</span> totalCount   = todos.<span class="accent">length</span>;
+<span class="keyword">const</span> doneCount    = todos.<span class="func">filter</span>(t =&gt; t.completed).<span class="accent">length</span>;
+<span class="keyword">const</span> pendingCount = totalCount - doneCount;</div>
+          <p style="margin-top:2mm;">Derived values are computed on every render — no redundant state. This follows the React principle: <strong>derive, don't duplicate</strong>.</p>
+        </div>
+      </div>
+
+      <h3>API Integration Layer</h3>
+      <div class="code-block"><span class="comment">// Centralized Axios instance with base configuration</span>
+<span class="keyword">const</span> api = axios.<span class="func">create</span>({ baseURL: <span class="string">'http://localhost:5000'</span> });
+
+<span class="comment">// CRUD Operations — each returns server-confirmed data</span>
+<span class="func">fetchTodos</span>()   → <span class="blue">GET    /todos</span>       → <span class="accent">setTodos(res.data)</span>
+<span class="func">addTodo</span>(text)  → <span class="blue">POST   /todos</span>       → <span class="accent">append to state</span>
+<span class="func">toggleTodo</span>(id) → <span class="blue">PUT    /todos/:id</span>   → <span class="accent">replace in state</span>
+<span class="func">deleteTodo</span>(id) → <span class="blue">DELETE /todos/:id</span>   → <span class="accent">filter from state</span></div>
+
+      <h3>Key Patterns</h3>
+      <ul class="feature-list">
+        <li><strong>Server-Confirmed Updates</strong> — State is updated with the server's response, not optimistic local data</li>
+        <li><strong>Functional State Updates</strong> — All <code>setTodos</code> calls use <code>prev =&gt; ...</code> to avoid stale closures</li>
+        <li><strong>Controlled Components</strong> — TodoForm input is fully controlled via <code>value</code> + <code>onChange</code></li>
+        <li><strong>Effect-Based Fetching</strong> — <code>useEffect([], [])</code> triggers a single fetch on mount</li>
+      </ul>
+
+      <span class="page-number">06</span>
+    </div>
+  </div>
+
+  <!-- ==============================
+       PAGE 7 — UI/UX DESIGN SYSTEM
+       ============================== -->
+  <div class="pdf-page">
+    <div class="content-area">
+      <div class="page-header">
+        <span class="page-header-title">UI/UX Design System</span>
+        <span class="page-header-project">Codex Architecture</span>
+      </div>
+      <div class="section-number">05</div>
+      <h2>UI/UX Design System</h2>
+
+      <p>The design follows a <strong>"Warm Brutalist Editorial"</strong> aesthetic — a dark, moody interface with warm amber accents, editorial-grade typography, and cinematic grain texture. Every design decision is encoded in CSS custom properties.</p>
+
+      <h3>Color Palette</h3>
+      <div class="design-grid">
+        <div class="color-swatch">
+          <div class="swatch-color" style="background:#0f0f0f;"></div>
+          <div class="swatch-name">Deep Black</div>
+          <div class="swatch-hex">#0f0f0f</div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-color" style="background:#1a1a1a;"></div>
+          <div class="swatch-name">Surface</div>
+          <div class="swatch-hex">#1a1a1a</div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-color" style="background:#222222;"></div>
+          <div class="swatch-name">Elevated</div>
+          <div class="swatch-hex">#222222</div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-color" style="background:#e8a738;"></div>
+          <div class="swatch-name">Amber Accent</div>
+          <div class="swatch-hex">#e8a738</div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-color" style="background:#f0ece4;"></div>
+          <div class="swatch-name">Primary Text</div>
+          <div class="swatch-hex">#f0ece4</div>
+        </div>
+      </div>
+
+      <h3>Typography</h3>
+      <div class="two-col">
+        <div>
+          <div class="tech-card">
+            <div class="tech-card-label">Display / Headlines</div>
+            <div class="tech-card-value" style="font-family:'Playfair Display',serif;">DM Serif Display</div>
+            <div class="tech-card-desc">High-contrast transitional serif. Used for the brand name, stats values, and section headers. Brings editorial gravitas.</div>
+          </div>
+        </div>
+        <div>
+          <div class="tech-card">
+            <div class="tech-card-label">Body / UI Elements</div>
+            <div class="tech-card-value">Outfit</div>
+            <div class="tech-card-desc">Geometric sans-serif with wide weight range (300-700). Clean, modern, and highly legible at small sizes. Used for all interactive text.</div>
+          </div>
+        </div>
+      </div>
+
+      <h3>Animation Strategy</h3>
+      <table class="api-table">
+        <thead>
+          <tr>
+            <th>Animation</th>
+            <th>Target</th>
+            <th>Purpose</th>
+            <th>Timing</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>fadeInUp</strong></td>
+            <td>Container, header, form</td>
+            <td>Orchestrated page load reveal</td>
+            <td>0.6s ease-out, staggered</td>
+          </tr>
+          <tr>
+            <td><strong>slideInRight</strong></td>
+            <td>Each todo item</td>
+            <td>List items cascade with 50ms stagger</td>
+            <td>0.4s ease-out</td>
+          </tr>
+          <tr>
+            <td><strong>checkPop</strong></td>
+            <td>Custom checkbox</td>
+            <td>Satisfying scale bounce on completion</td>
+            <td>0.3s ease</td>
+          </tr>
+          <tr>
+            <td><strong>grainShift</strong></td>
+            <td>Grain overlay</td>
+            <td>Subtle film grain texture shift</td>
+            <td>8s stepped infinite</td>
+          </tr>
+          <tr>
+            <td><strong>shimmer</strong></td>
+            <td>Loading bar</td>
+            <td>Animated gradient sweep during fetch</td>
+            <td>1.5s ease-in-out infinite</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Design Features</h3>
+      <ul class="feature-list">
+        <li><strong>Film Grain Overlay</strong> — SVG noise texture with animated position shift adds analog warmth</li>
+        <li><strong>Ambient Glow</strong> — Radial gradient behind card creates a soft amber halo for focus</li>
+        <li><strong>Custom Checkbox</strong> — Native checkbox hidden; replaced with styled span + SVG checkmark</li>
+        <li><strong>Hover-Reveal Delete</strong> — Delete buttons hidden until row hover, reducing visual noise</li>
+        <li><strong>Responsive</strong> — 480px breakpoint: stacked form, scaled type, always-visible delete on touch</li>
+      </ul>
+
+      <span class="page-number">07</span>
+    </div>
+  </div>
+
+  <!-- ==============================
+       PAGE 8 — DATA FLOW
+       ============================== -->
+  <div class="pdf-page">
+    <div class="content-area">
+      <div class="page-header">
+        <span class="page-header-title">Data Flow &amp; Communication</span>
+        <span class="page-header-project">Codex Architecture</span>
+      </div>
+      <div class="section-number">06</div>
+      <h2>Data Flow &amp; Communication</h2>
+
+      <p>The application uses a <strong>server-confirmed update pattern</strong>. Every mutation (create, toggle, delete) makes an API call first, then updates local state only after receiving a successful response.</p>
+
+      <h3>Request Lifecycle: Add Todo</h3>
+      <div class="arch-diagram"><span class="accent">User types "Buy groceries" → clicks Add</span>
+
+<span class="blue">1. TodoForm</span>
+   <span class="dim">├──</span> Prevents default form submission
+   <span class="dim">├──</span> Trims whitespace, validates non-empty
+   <span class="dim">├──</span> Calls <span class="accent">onAdd("Buy groceries")</span>
+   <span class="dim">└──</span> Resets input to empty string
+
+<span class="blue">2. App.addTodo()</span>
+   <span class="dim">├──</span> <span class="green">POST /todos</span>  { text: "Buy groceries" }
+   <span class="dim">├──</span> Server validates, creates { id: 3, text: "...", completed: false }
+   <span class="dim">├──</span> Returns <span class="accent">201</span> with new todo object
+   <span class="dim">└──</span> <span class="pink">setTodos(prev => [...prev, res.data])</span>
+
+<span class="blue">3. React Re-render</span>
+   <span class="dim">├──</span> TodoList receives updated todos array
+   <span class="dim">├──</span> New TodoItem renders with slideInRight animation
+   <span class="dim">├──</span> Stats bar recalculates: Total +1, Pending +1
+   <span class="dim">└──</span> Footer updates remaining count</div>
+
+      <h3>Request Lifecycle: Toggle Todo</h3>
+      <div class="flow">
+        <div class="flow-step">Checkbox Click</div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">onToggle(id)</div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step highlight">PUT /todos/:id</div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">Server flips completed</div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">Replace via .map()</div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">Re-render</div>
+      </div>
+
+      <h3>Request Lifecycle: Delete Todo</h3>
+      <div class="flow">
+        <div class="flow-step">Delete Click</div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">onDelete(id)</div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step highlight">DELETE /todos/:id</div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">Server removes</div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">Filter via .filter()</div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">Re-render</div>
+      </div>
+
+      <h3>State Update Strategies</h3>
+      <div class="two-col">
+        <div>
+          <h4>Immutable Updates</h4>
+          <div class="code-block"><span class="comment">// Add: spread + append</span>
+<span class="func">setTodos</span>(prev =&gt; [...prev, newTodo]);
+
+<span class="comment">// Toggle: map + replace</span>
+<span class="func">setTodos</span>(prev =&gt;
+  prev.<span class="func">map</span>(t =&gt; t.id === id ? updated : t)
+);
+
+<span class="comment">// Delete: filter out</span>
+<span class="func">setTodos</span>(prev =&gt;
+  prev.<span class="func">filter</span>(t =&gt; t.id !== id)
+);</div>
+        </div>
+        <div>
+          <h4>Why Functional Updates?</h4>
+          <p>Every <code>setTodos</code> call uses the <code>prev =&gt;</code> callback form rather than referencing the <code>todos</code> variable directly. This prevents <strong>stale closure</strong> bugs — if multiple rapid operations happen, each update correctly operates on the latest state.</p>
+          <div class="highlight-box">
+            <p><strong>Interview Tip:</strong> This is a common React pitfall. Using <code>setTodos([...todos, newTodo])</code> inside an async function would reference the value at closure creation time, potentially losing concurrent updates.</p>
+          </div>
+        </div>
+      </div>
+
+      <span class="page-number">08</span>
+    </div>
+  </div>
+
+  <!-- ==============================
+       PAGE 9 — TRADE-OFFS & ROADMAP
+       ============================== -->
+  <div class="pdf-page">
+    <div class="content-area">
+      <div class="page-header">
+        <span class="page-header-title">Trade-offs &amp; Future Roadmap</span>
+        <span class="page-header-project">Codex Architecture</span>
+      </div>
+      <div class="section-number">07</div>
+      <h2>Trade-offs &amp; Future Roadmap</h2>
+
+      <p>Every architecture involves trade-offs. Here's an honest assessment of current decisions and how the system would evolve toward production scale.</p>
+
+      <h3>Current Trade-offs</h3>
+      <table class="api-table">
+        <thead>
+          <tr>
+            <th style="width:28%">Decision</th>
+            <th style="width:36%">Benefit</th>
+            <th style="width:36%">Limitation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>In-memory data store</strong></td>
+            <td>Zero setup, instant reads, perfect for prototyping</td>
+            <td>Data lost on server restart; not suitable for production</td>
+          </tr>
+          <tr>
+            <td><strong>Server-confirmed updates</strong></td>
+            <td>UI always reflects true server state; no rollback logic needed</td>
+            <td>Perceived latency on slow networks; UI feels less snappy</td>
+          </tr>
+          <tr>
+            <td><strong>Single-file server</strong></td>
+            <td>Easy to understand end-to-end; minimal abstraction</td>
+            <td>Routes, models, and logic coupled; won't scale to 20+ endpoints</td>
+          </tr>
+          <tr>
+            <td><strong>useState over useReducer</strong></td>
+            <td>Simpler API for this scale; less boilerplate</td>
+            <td>Complex state transitions (undo, batch) would benefit from reducer</td>
+          </tr>
+          <tr>
+            <td><strong>No error boundaries</strong></td>
+            <td>Less code; errors visible in console during development</td>
+            <td>Production needs graceful error handling and user-facing feedback</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Production Scaling Roadmap</h3>
+      <div class="two-col">
+        <div>
+          <h4>Phase 1 — Persistence</h4>
+          <ul>
+            <li>Add <strong>MongoDB</strong> or <strong>PostgreSQL</strong> via repository pattern</li>
+            <li>Introduce <strong>Mongoose/Prisma</strong> ORM for schema validation</li>
+            <li>Add database migrations and seed scripts</li>
+          </ul>
+
+          <h4>Phase 2 — Auth &amp; Security</h4>
+          <ul>
+            <li><strong>JWT authentication</strong> with refresh tokens</li>
+            <li>User-scoped todos (multi-tenancy)</li>
+            <li>Rate limiting, helmet, input sanitization</li>
+          </ul>
+
+          <h4>Phase 3 — Architecture</h4>
+          <ul>
+            <li>Extract <strong>controller / service / repository</strong> layers</li>
+            <li>Add <strong>React Query / TanStack Query</strong> for server state caching</li>
+            <li>Implement <strong>optimistic updates</strong> with rollback</li>
+          </ul>
+        </div>
+        <div>
+          <h4>Phase 4 — Testing</h4>
+          <ul>
+            <li>Unit tests: <strong>Vitest</strong> for component logic</li>
+            <li>Integration tests: <strong>Testing Library</strong> for user flows</li>
+            <li>API tests: <strong>Supertest</strong> for endpoint contracts</li>
+          </ul>
+
+          <h4>Phase 5 — DevOps</h4>
+          <ul>
+            <li><strong>Docker</strong> containerization (frontend + backend)</li>
+            <li><strong>CI/CD pipeline</strong> with GitHub Actions</li>
+            <li>Environment-based config (<code>.env</code> files)</li>
+          </ul>
+
+          <h4>Phase 6 — Features</h4>
+          <ul>
+            <li>Due dates, priorities, categories</li>
+            <li>Drag-and-drop reordering</li>
+            <li>Real-time sync via <strong>WebSockets</strong></li>
+            <li>Offline-first with <strong>Service Workers</strong></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="highlight-box" style="margin-top:4mm;">
+        <p><strong>Key Takeaway:</strong> This architecture is deliberately simple — not because of limitations, but because <strong>the right amount of complexity is the minimum needed for current requirements</strong>. Every layer (database, auth, caching) can be added incrementally without rewriting existing code, thanks to the clean separation of concerns established from day one.</p>
+      </div>
+
+      <span class="page-number">09</span>
+    </div>
+  </div>
+
+</body>
+</html>

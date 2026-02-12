@@ -1,0 +1,633 @@
+/* ===========================
+   Codex — Warm Brutalist Editorial
+   =========================== */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(232, 167, 56, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(232, 167, 56, 0.12);
+  }
+}
+
+@keyframes checkPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+@keyframes grainShift {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-2%, -2%); }
+  30% { transform: translate(1%, 3%); }
+  50% { transform: translate(-3%, 1%); }
+  70% { transform: translate(3%, -1%); }
+  90% { transform: translate(1%, 2%); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+:root {
+  /* Palette */
+  --bg-deep: #0f0f0f;
+  --bg-surface: #1a1a1a;
+  --bg-elevated: #222222;
+  --bg-hover: #2a2a2a;
+  --border-subtle: #2e2e2e;
+  --border-accent: #3a3a3a;
+  --text-primary: #f0ece4;
+  --text-secondary: #9a9590;
+  --text-muted: #5a5550;
+  --accent: #e8a738;
+  --accent-dim: rgba(232, 167, 56, 0.12);
+  --accent-glow: rgba(232, 167, 56, 0.25);
+  --danger: #c0392b;
+  --danger-hover: #e74c3c;
+  --success: #7fb069;
+
+  /* Typography */
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-body: 'Outfit', system-ui, sans-serif;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
+  --space-2xl: 64px;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* ===========================
+   Grain Overlay
+   =========================== */
+.grain-overlay {
+  position: fixed;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 9999;
+  animation: grainShift 8s steps(10) infinite;
+}
+
+/* ===========================
+   Page Layout
+   =========================== */
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl) var(--space-md);
+  position: relative;
+}
+
+/* Ambient glow behind the card */
+.page::before {
+  content: '';
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  filter: blur(100px);
+  opacity: 0.3;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -60%);
+  pointer-events: none;
+}
+
+/* ===========================
+   Container / Card
+   =========================== */
+.container {
+  width: 100%;
+  max-width: 560px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl) var(--space-lg);
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Decorative top accent bar */
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--space-lg);
+  right: var(--space-lg);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  border-radius: 2px;
+}
+
+/* ===========================
+   Header
+   =========================== */
+.app-header {
+  margin-bottom: var(--space-lg);
+  animation: fadeInUp 0.6s ease-out 0.1s both;
+}
+
+.app-header h1 {
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.app-header h1 .accent-dot {
+  color: var(--accent);
+}
+
+.app-subtitle {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  margin-top: var(--space-sm);
+}
+
+.header-rule {
+  border: none;
+  height: 1px;
+  background: var(--border-subtle);
+  margin-top: var(--space-md);
+}
+
+/* ===========================
+   Stats Bar
+   =========================== */
+.stats-bar {
+  display: flex;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+  padding: var(--space-md) 0;
+  animation: fadeInUp 0.6s ease-out 0.15s both;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.stat-value.accent {
+  color: var(--accent);
+}
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+/* ===========================
+   Todo Form
+   =========================== */
+.todo-form {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+.todo-form .input-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.todo-form input {
+  width: 100%;
+  padding: 14px 18px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.2px;
+  outline: none;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.todo-form input::placeholder {
+  color: var(--text-muted);
+  font-weight: 300;
+}
+
+.todo-form input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.todo-form button {
+  padding: 14px 22px;
+  background: var(--accent);
+  color: var(--bg-deep);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.todo-form button:hover {
+  background: #d4952f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(232, 167, 56, 0.3);
+}
+
+.todo-form button:active {
+  transform: translateY(0);
+}
+
+/* ===========================
+   Section Label
+   =========================== */
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+}
+
+/* ===========================
+   Todo List
+   =========================== */
+.todo-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* ===========================
+   Todo Item
+   =========================== */
+.todo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition: all 0.25s ease;
+  animation: slideInRight 0.4s ease-out both;
+}
+
+.todo-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-accent);
+}
+
+.todo-item.completed-item {
+  opacity: 0.5;
+}
+
+.todo-item.completed-item:hover {
+  opacity: 0.7;
+}
+
+.todo-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+}
+
+/* ===========================
+   Custom Checkbox
+   =========================== */
+.custom-checkbox {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.custom-checkbox input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  z-index: 1;
+  margin: 0;
+}
+
+.checkbox-visual {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--border-accent);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkbox-visual svg {
+  width: 12px;
+  height: 12px;
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.2s ease;
+}
+
+.custom-checkbox input:checked + .checkbox-visual {
+  background: var(--accent);
+  border-color: var(--accent);
+  animation: checkPop 0.3s ease;
+}
+
+.custom-checkbox input:checked + .checkbox-visual svg {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.custom-checkbox input:focus-visible + .checkbox-visual {
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+/* ===========================
+   Todo Text
+   =========================== */
+.todo-text {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 1.4;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.todo-text.completed {
+  text-decoration: line-through;
+  text-decoration-color: var(--text-muted);
+  text-decoration-thickness: 1.5px;
+  color: var(--text-muted);
+}
+
+/* ===========================
+   Delete Button
+   =========================== */
+.delete-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.todo-item:hover .delete-btn {
+  opacity: 1;
+}
+
+.delete-btn:hover {
+  color: var(--danger-hover);
+  border-color: var(--danger);
+  background: rgba(192, 57, 43, 0.1);
+}
+
+/* ===========================
+   Empty State
+   =========================== */
+.empty-state {
+  text-align: center;
+  padding: var(--space-2xl) var(--space-lg);
+  animation: fadeInUp 0.6s ease-out 0.3s both;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: var(--space-md);
+  opacity: 0.2;
+  display: block;
+  font-family: var(--font-display);
+  color: var(--text-muted);
+}
+
+.empty-state p {
+  color: var(--text-muted);
+  font-size: 15px;
+  font-weight: 300;
+  letter-spacing: 0.3px;
+}
+
+.empty-state .empty-hint {
+  font-size: 12px;
+  margin-top: var(--space-sm);
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+/* ===========================
+   Loading State
+   =========================== */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-2xl) var(--space-lg);
+}
+
+.loading-bar {
+  width: 120px;
+  height: 2px;
+  background: var(--border-subtle);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.loading-bar-inner {
+  width: 40%;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  animation: shimmer 1.5s ease-in-out infinite;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-glow) 50%, var(--accent) 100%);
+  background-size: 200% 100%;
+}
+
+.loading-text {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ===========================
+   Footer
+   =========================== */
+.app-footer {
+  margin-top: var(--space-xl);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  animation: fadeInUp 0.6s ease-out 0.4s both;
+}
+
+.footer-left {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+.clear-completed-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.clear-completed-btn:hover {
+  color: var(--danger-hover);
+  background: rgba(192, 57, 43, 0.08);
+}
+
+/* ===========================
+   Responsive
+   =========================== */
+@media (max-width: 480px) {
+  .container {
+    padding: var(--space-lg) var(--space-md);
+    border-radius: var(--radius-md);
+  }
+
+  .app-header h1 {
+    font-size: 32px;
+  }
+
+  .stats-bar {
+    gap: var(--space-md);
+  }
+
+  .stat-value {
+    font-size: 22px;
+  }
+
+  .todo-form {
+    flex-direction: column;
+  }
+
+  .todo-form button {
+    padding: 12px;
+  }
+
+  .delete-btn {
+    opacity: 1;
+  }
+}
